@@ -11,6 +11,9 @@ class MailActivity(models.Model):
 
     active = fields.Boolean(default=True)
     done = fields.Boolean(default=False)
+    done_user_id = fields.Many2one(
+        comodel_name="res.users", string="Done User", readonly=True
+    )
     state = fields.Selection(
         selection_add=[("done", "Done")],
         compute="_compute_state",
@@ -70,7 +73,14 @@ class MailActivity(models.Model):
 
     def _action_done(self, feedback=False, attachment_ids=None):
         """Ask super not to delete the activity and set it to done"""
-        self.write({"done": True, "active": False, "date_done": fields.Date.today()})
+        self.write(
+            {
+                "done": True,
+                "active": False,
+                "date_done": fields.Date.today(),
+                "done_user_id": self.env.uid,
+            }
+        )
         return super(
             MailActivity,
             self.with_context(mail_activity_done=delete_sentinel),
